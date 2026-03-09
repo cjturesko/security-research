@@ -1,0 +1,212 @@
+# Threat Analysis: "Sailors" PhaaS Kit / Government Agency Toll Lure
+
+**Date:** March 2026  
+**Sample Source:** SMS received on personal device  
+**TLP:** White (suitable for public sharing)
+
+---
+
+## Executive Summary
+
+A phishing SMS impersonating a US state motor vehicle agency was received claiming an outstanding toll charge of $6.90. Analysis of the linked site uncovered an Adversary-in-the-Middle (AiTM) phishing kit named "Sailors," sold as a Phishing-as-a-Service (PhaaS). Unlike typical phishing kits that just log stolen credentials, this one uses real-time WebSocket communication with AES-256-CBC encryption and live OTP relay, allowing the operator to actively complete fraudulent transactions while the victim is still on the page. Chinese-language strings embedded in the source point to a Chinese-speaking developer who likely sold access to a separate campaign operator.
+
+---
+
+## Initial Lure
+
+| Field | Value |
+|---|---|
+| Delivery method | SMS (Smishing) |
+| Sender number | Philippines-registered VoIP number (+63) |
+| Lure text | Outstanding state toll charge of $6.90 |
+| Phishing domain | `[target-agency].org-yhkjk.bond` |
+| Infrastructure | Cloudflare CDN |
+
+Using a Philippines-registered VoIP number to impersonate a US state government agency is an obvious operational security mistake on the operator's part. It points to the campaign operator being a separate person from the kit developer, which is typical of the PhaaS model.
+
+---
+
+## Kit Identification
+
+The kit references itself internally as **"Sailors"** based on the following:
+
+- localStorage key: `sailors_form_data`
+- CSS class names: `sailors-router-view`, `sailors-span`
+- Framework: Vue.js single-page application bundled with Vite
+- Obfuscation: string rotation with base64 decoder pattern across multiple function families
+
+### Authorship Indicators
+
+Chinese strings were found embedded as internal UI state labels. These are not shown to victims but exist in the source code:
+
+| Chinese | Translation |
+|---|---|
+| 支付页 | Payment page |
+| 手机验证页 | Phone verification page |
+| 邮箱验证页 | Email verification page |
+| 完成页 | Completion page |
+| 加密异常 | Encryption exception |
+| 解密异常 | Decryption exception |
+
+The combination of Chinese internal labels, kit sophistication, and PhaaS delivery model is consistent with Chinese-developed crimeware sold through Telegram or Chinese cybercrime forums.
+
+---
+
+## Technical Architecture
+
+### AiTM vs. Traditional Phishing
+
+This is not a simple credential harvester. The kit runs a full Adversary-in-the-Middle setup where a live operator receives victim data in real time and uses it on the real service before the session or OTP expires.
+
+```
+Victim fills form
+      |
+      v
+JS encrypts data (AES-256-CBC)
+      |
+      v
+WebSocket to operator dashboard (/console)
+      |
+      v
+Operator receives OTP live, uses it on real bank/service
+      |
+      v
+Victim sees "success" page
+```
+
+The attacker is not storing credentials to use later. They are actively using them within the 30 to 60 second OTP validity window to complete real transactions in real time.
+
+### Command and Control
+
+- **Protocol:** WebSocket (Socket.IO) upgraded from HTTPS
+- **Path:** `/console`
+- **Endpoint construction:** built from `window.location.host` at runtime with no hardcoded C2 domain in the source
+- **Encryption:** AES-256-CBC with PKCS7 padding
+- **Key storage:** assembled from obfuscated string fragments at runtime
+- **Session tracking:** UUID generated per victim and passed as a WebSocket query parameter
+
+Building the WebSocket URL from `window.location.host` at runtime means static analysis tools scanning the JS file in isolation will find no hardcoded domain. The file looks clean to automated scanners.
+
+The AES key and IV were found hardcoded in the obfuscated source rather than being negotiated at runtime or generated per session. Within this sample the values are static. If the same compiled bundle is distributed to multiple operators without recompilation, the key would be identical across those deployments, meaning captured WebSocket traffic from any instance sharing this bundle could be decrypted with the same values. This has not been confirmed across multiple samples.
+
+### Data Captured
+
+The kit sends the following to the operator dashboard in sequence:
+
+- Payment card details (number, expiry, CVV)
+- SMS one-time passcodes
+- Email one-time passcodes
+- Authenticator app codes
+- PIN numbers
+
+### Bot Detection
+
+The kit loads **FingerprintJS Botd** from `openfpcdn.io`. If the visitor is flagged as a bot or headless browser the kit does not run, which makes dynamic analysis harder without a genuine browser environment.
+
+---
+
+## Infrastructure Analysis
+
+### Domain and Certificate Data
+
+| Field | Value |
+|---|---|
+| Registered domain | `org-yhkjk.bond` |
+| Phishing subdomain | `[target-agency].org-yhkjk.bond` |
+| Certificate issued | March 2026 |
+| Certificate type | Wildcard (`*.org-yhkjk.bond`) |
+| CAs used | Let's Encrypt (x2) + Sectigo DV (x2) |
+| CDN | Cloudflare (origin IP masked) |
+
+Four certificates were issued on the same day across two certificate authorities, which points to automated provisioning rather than manual setup. The wildcard certificate covers any subdomain under the registered domain, so the operator can run multiple lures under different agency names without requesting additional certificates.
+
+### Possible Related Infrastructure
+
+Certificate Transparency log analysis via crt.sh found two domains with the same structural and provisioning pattern from January 2026, about six weeks before the analyzed campaign:
+
+| Domain | Issued | CAs |
+|---|---|---|
+| `org-tvp.bond` | 2026-01-25 | Let's Encrypt + Sectigo DV |
+| `org-nyw.bond` | 2026-01-25 | Let's Encrypt + Sectigo DV |
+| `org-yhkjk.bond` | 2026-03-05 | Let's Encrypt + Sectigo DV |
+
+All three use the same TLD, the same second-level naming pattern (`org-[random]`), wildcard certificates, and the same dual-CA provisioning. Attribution cannot be confirmed from this alone but the overlap is worth noting and may represent earlier campaign waves from the same operator.
+
+### File Hashes (Main Kit JS)
+
+| Algorithm | Hash |
+|---|---|
+| MD5 | `a6f2adaf6bd771efa29369e40ae0e7d8` |
+| SHA1 | `8c5c409ade18be8dc6befc069d5300e974a2f6e6` |
+| SHA256 | `6339e92bf4560087496817a41d7df9fd1b426373de6cb060e7e13352a46905f9` |
+
+---
+
+## Pivot Analysis and Why It Came Up Empty
+
+Pivoting was attempted across Shodan, URLscan.io, VirusTotal, FOFA, Censys, and crt.sh. Nothing came back. Here is why each avenue failed:
+
+**Cloudflare beacon token** is unique per domain. If it were reused across deployments it would have been the most reliable pivot point, but each new domain gets its own token automatically.
+
+**Kit strings** like `sailors_form_data` returned zero results across all platforms and search engines. The kit either had not been crawled yet or the operator kept public exposure to a minimum.
+
+**No hardcoded C2** means there is no IP or domain sitting in the JS file for static analysis to pull out. The WebSocket URL is built at runtime so it does not exist in the code as a string.
+
+**Hash not in VirusTotal** at time of analysis. The file had not been submitted anywhere publicly, which fits a targeted campaign rather than something blasted out at scale.
+
+Getting nothing back across all platforms is itself a finding. This kit has better operational security than most commodity phishing tools and the zero results appear intentional.
+
+---
+
+## MITRE ATT&CK Mapping
+
+| Observed Behavior | Tactic | Technique |
+|---|---|---|
+| SMS lure impersonating government agency | Initial Access | T1660 Phishing: Smishing |
+| Fake payment form capturing card data | Collection | T1056 Input Capture |
+| Live OTP relay to real service | Credential Access | T1557 Adversary-in-the-Middle |
+| AES-256-CBC encrypted WebSocket channel | Command and Control | T1573 Encrypted Channel |
+| WebSocket / Socket.IO C2 | Command and Control | T1071 Application Layer Protocol |
+| Cloudflare CDN masking origin server | Defense Evasion | T1090 Proxy |
+| Obfuscated JavaScript (string rotation) | Defense Evasion | T1027 Obfuscated Files or Information |
+| FingerprintJS Botd anti-analysis check | Defense Evasion | T1497 Virtualization/Sandbox Evasion |
+| Runtime URL construction with no hardcoded C2 | Defense Evasion | T1027.010 Command Obfuscation |
+
+---
+
+## Takeaways
+
+**For defenders:**
+
+AiTM kits bypass standard MFA completely. SMS codes, email codes, and authenticator app codes can all be relayed in real time. The only MFA that cannot be relayed this way is a hardware security key using FIDO2 or WebAuthn. If your threat model includes targeted phishing, hardware keys are the only reliable protection.
+
+No Telegram API calls in network traffic does not mean the kit is less capable. It may mean the operator channel is more sophisticated and harder to detect.
+
+A newly registered domain on an uncommon TLD like `.bond`, `.top`, or `.xyz` sitting behind Cloudflare and impersonating a government or utility service is a reliable pattern for this type of attack.
+
+**For threat intel:**
+
+Certificate Transparency logs via crt.sh are still useful even when every paid platform comes up empty. In this case crt.sh confirmed the provisioning date and surfaced two possible related domains that nothing else found.
+
+When a kit shows clean OPSEC on infrastructure but sloppy delivery via a foreign phone number, that gap usually means the kit developer and the campaign operator are two different people. The developer built something technically solid and sold access to someone who did not put the same care into the delivery side.
+
+Zero pivot results across multiple platforms on a live kit is not a dead end. It is a data point. It means either the kit is very recently deployed or someone was deliberate about keeping it off public infrastructure scanners.
+
+---
+
+## Indicators of Compromise
+
+| Type | Value |
+|---|---|
+| Domain | `org-yhkjk.bond` |
+| Domain (related) | `org-tvp.bond` |
+| Domain (related) | `org-nyw.bond` |
+| JS SHA256 | `6339e92bf4560087496817a41d7df9fd1b426373de6cb060e7e13352a46905f9` |
+| JS MD5 | `a6f2adaf6bd771efa29369e40ae0e7d8` |
+| Cloudflare beacon | `71fabe53af6b4350a6c4c1e7459c0adf` |
+| WebSocket path | `/console` |
+| localStorage key | `sailors_form_data` |
+
+---
+
+*Analysis conducted March 2026. Sample obtained via unsolicited SMS on personal device. No systems were compromised during analysis.*
