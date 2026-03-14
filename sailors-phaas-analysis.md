@@ -120,17 +120,40 @@ The kit loads **FingerprintJS Botd** from `openfpcdn.io`. If the visitor is flag
 
 Four certificates were issued on the same day across two certificate authorities, which points to automated provisioning rather than manual setup. The wildcard certificate covers any subdomain under the registered domain, so the operator can run multiple lures under different agency names without requesting additional certificates.
 
-### Possible Related Infrastructure
+## Possible Related Infrastructure
 
-Certificate Transparency log analysis via crt.sh found two domains with the same structural and provisioning pattern from January 2026, about six weeks before the analyzed campaign:
+Certificate Transparency log analysis via crt.sh identified a cluster of 21 domains sharing the same structural and provisioning pattern, all registered on 2026-03-04:
 
 | Domain | Issued | CAs |
 |---|---|---|
-| `org-tvp.bond` | 2026-01-25 | Let's Encrypt + Sectigo DV |
-| `org-nyw.bond` | 2026-01-25 | Let's Encrypt + Sectigo DV |
-| `org-yhkjk.bond` | 2026-03-05 | Let's Encrypt + Sectigo DV |
+| org-tvp.bond | 2026-01-25 | Let's Encrypt + Sectigo DV |
+| org-nyw.bond | 2026-01-25 | Let's Encrypt + Sectigo DV |
+| org-yhkjk.bond | 2026-03-05 | Let's Encrypt + Sectigo DV |
+| org-gqeeb.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-gqrza.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-gqtla.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-gquia.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-gquib.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-gquic.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-gqwxa.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-gqyeb.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-gqyga.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-rhmas.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-rhmer.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-rhmio.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-rhmpa.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-rhmqw.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-rhmrt.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-rhmwe.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-rhmyu.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-tfupa.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-tfuvb.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-ykopa.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
+| org-ykovb.bond | 2026-03-04 | Let's Encrypt + Sectigo DV |
 
-All three use the same TLD, the same second-level naming pattern (`org-[random]`), wildcard certificates, and the same dual-CA provisioning. Attribution cannot be confirmed from this alone but the overlap is worth noting and may represent earlier campaign waves from the same operator.
+Three separate registration dates, all producing the same org-[random].bond naming pattern and the same dual-CA cert provisioning. The January domains predate the analyzed sample by about six weeks and likely represent an earlier campaign wave. The March 4th cluster of 21 domains provisioned on a single day points to automated bulk registration rather than anything being set up by hand. At this volume, manual domain setup is not realistic.
+
+Each domain received four certificates on registration day, two from Let's Encrypt and two from Sectigo DV E36, which is consistent with a hosting panel auto-provisioning certs across multiple CAs simultaneously. Every certificate SHA256 across the cluster is unique, meaning no certs were shared or reused between domains. That rules out a simple copy-paste setup and suggests each domain was independently provisioned, likely through the same automated process.
 
 ### File Hashes (Main Kit JS)
 
