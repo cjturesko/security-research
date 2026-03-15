@@ -155,6 +155,8 @@ Three separate registration dates, all producing the same org-[random].bond nami
 
 Each domain received four certificates on registration day, two from Let's Encrypt and two from Sectigo DV E36, which is consistent with a hosting panel auto-provisioning certs across multiple CAs simultaneously. Every certificate SHA256 across the cluster is unique, meaning no certs were shared or reused between domains. That rules out a simple copy-paste setup and suggests each domain was independently provisioned, likely through the same automated process.
 
+A source familiar with this campaign noted that over 1,000 domains matching this naming pattern may have been registered in the last 90 days. That figure has not been independently verified, but the provisioning consistency across the sample examined here makes it plausible. If accurate, the domain analyzed in this report is a small slice of an active, ongoing campaign. The January 2026 domains suggest the operator has been running this infrastructure for at least two months before the March cluster was registered.
+
 ### File Hashes (Main Kit JS)
 
 | Algorithm | Hash |
@@ -209,7 +211,7 @@ A newly registered domain on an uncommon TLD like `.bond`, `.top`, or `.xyz` sit
 
 **For threat intel:**
 
-Certificate Transparency logs via crt.sh are still useful even when every paid platform comes up empty. In this case crt.sh confirmed the provisioning date and surfaced two possible related domains that nothing else found.
+Certificate Transparency logs via crt.sh are still useful even when every paid platform comes up empty. In this case crt.sh confirmed the provisioning date and surfaced a cluster of related domains that nothing else found. The pattern was consistent enough across 24 domains that the infrastructure relationship is more likely than not, even without direct code or credential overlap to confirm it.
 
 When a kit shows clean OPSEC on infrastructure but sloppy delivery via a foreign phone number, that gap usually means the kit developer and the campaign operator are two different people. The developer built something technically solid and sold access to someone who did not put the same care into the delivery side.
 
@@ -221,14 +223,37 @@ Zero pivot results across multiple platforms on a live kit is not a dead end. It
 
 | Type | Value |
 |---|---|
-| Domain | `org-yhkjk.bond` |
-| Domain (related) | `org-tvp.bond` |
-| Domain (related) | `org-nyw.bond` |
-| JS SHA256 | `6339e92bf4560087496817a41d7df9fd1b426373de6cb060e7e13352a46905f9` |
-| JS MD5 | `a6f2adaf6bd771efa29369e40ae0e7d8` |
-| Cloudflare beacon | `71fabe53af6b4350a6c4c1e7459c0adf` |
-| WebSocket path | `/console` |
-| localStorage key | `sailors_form_data` |
+| Domain (analyzed) | org-yhkjk.bond |
+| Domain (related, Jan 2026) | org-tvp.bond |
+| Domain (related, Jan 2026) | org-nyw.bond |
+| Domain (related, Mar 2026) | org-gqeeb.bond |
+| Domain (related, Mar 2026) | org-gqrza.bond |
+| Domain (related, Mar 2026) | org-gqtla.bond |
+| Domain (related, Mar 2026) | org-gquia.bond |
+| Domain (related, Mar 2026) | org-gquib.bond |
+| Domain (related, Mar 2026) | org-gquic.bond |
+| Domain (related, Mar 2026) | org-gqwxa.bond |
+| Domain (related, Mar 2026) | org-gqyeb.bond |
+| Domain (related, Mar 2026) | org-gqyga.bond |
+| Domain (related, Mar 2026) | org-rhmas.bond |
+| Domain (related, Mar 2026) | org-rhmer.bond |
+| Domain (related, Mar 2026) | org-rhmio.bond |
+| Domain (related, Mar 2026) | org-rhmpa.bond |
+| Domain (related, Mar 2026) | org-rhmqw.bond |
+| Domain (related, Mar 2026) | org-rhmrt.bond |
+| Domain (related, Mar 2026) | org-rhmwe.bond |
+| Domain (related, Mar 2026) | org-rhmyu.bond |
+| Domain (related, Mar 2026) | org-tfupa.bond |
+| Domain (related, Mar 2026) | org-tfuvb.bond |
+| Domain (related, Mar 2026) | org-ykopa.bond |
+| Domain (related, Mar 2026) | org-ykovb.bond |
+| JS SHA256 | 6339e92bf4560087496817a41d7df9fd1b426373de6cb060e7e13352a46905f9 |
+| JS MD5 | a6f2adaf6bd771efa29369e40ae0e7d8 |
+| Cloudflare beacon | 71fabe53af6b4350a6c4c1e7459c0adf |
+| WebSocket path | /console |
+| localStorage key | sailors_form_data |
+
+Note: Four additional domains from the March 2026 cluster returned no crt.sh results at time of analysis (org-xaska.bond, org-xasla.bond, org-xaslb.bond, org-gqela.bond) and are omitted from the IOC table pending verification.
 
 ---
 
