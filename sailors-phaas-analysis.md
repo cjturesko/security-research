@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-A phishing SMS impersonating a US state motor vehicle agency was received claiming an outstanding toll charge of $6.90. Analysis of the linked site uncovered an Adversary-in-the-Middle (AiTM) phishing kit named "Sailors," sold as a Phishing-as-a-Service (PhaaS). Unlike typical phishing kits that just log stolen credentials, this one uses real-time WebSocket communication with AES-256-CBC encryption and live OTP relay, allowing the operator to actively complete fraudulent transactions while the victim is still on the page. Chinese-language strings embedded in the source point to a Chinese-speaking developer who likely sold access to a separate campaign operator.
+A phishing SMS impersonating a US state motor vehicle agency was received claiming an outstanding toll charge of $6.90. Analysis of the linked site uncovered an Adversary-in-the-Middle (AiTM) phishing kit named "Sailors," sold as a Phishing-as-a-Service (PhaaS). Unlike typical phishing kits that just log stolen credentials, this one uses real-time WebSocket communication with AES-128-CBC encryption and live OTP relay, allowing the operator to actively complete fraudulent transactions while the victim is still on the page. Chinese-language strings embedded in the source point to a Chinese-speaking developer who likely sold access to a separate campaign operator.
 
 ---
 
@@ -62,7 +62,7 @@ This is not a simple credential harvester. The kit runs a full Adversary-in-the-
 Victim fills form
       |
       v
-JS encrypts data (AES-256-CBC)
+JS encrypts data (AES-128-CBC)
       |
       v
 WebSocket to operator dashboard (/console)
@@ -81,13 +81,19 @@ The attacker is not storing credentials to use later. They are actively using th
 - **Protocol:** WebSocket (Socket.IO) upgraded from HTTPS
 - **Path:** `/console`
 - **Endpoint construction:** built from `window.location.host` at runtime with no hardcoded C2 domain in the source
-- **Encryption:** AES-256-CBC with PKCS7 padding
+- **Encryption:** AES-128-CBC with PKCS7 padding (16-byte key, confirmed static across multiple deployments)
 - **Key storage:** assembled from obfuscated string fragments at runtime
 - **Session tracking:** UUID generated per victim and passed as a WebSocket query parameter
 
 Building the WebSocket URL from `window.location.host` at runtime means static analysis tools scanning the JS file in isolation will find no hardcoded domain. The file looks clean to automated scanners.
 
-The AES key and IV were found hardcoded in the obfuscated source rather than being negotiated at runtime or generated per session. Within this sample the values are static. If the same compiled bundle is distributed to multiple operators without recompilation, the key would be identical across those deployments, meaning captured WebSocket traffic from any instance sharing this bundle could be decrypted with the same values. This has not been confirmed across multiple samples.
+The AES key and IV were found hardcoded in the obfuscated source rather than being negotiated at runtime or generated per session. Analysis of a second independent sample from a different deployment domain confirmed the values are identical across both, verifying that the same compiled bundle is distributed to multiple operators without recompilation. Any Socket.IO traffic captured from a Sailors-based phishing page can be decrypted with the following static values:
+
+| Parameter | Value |
+|---|---|
+| Algorithm | AES-128-CBC + PKCS7 |
+| Key (variable `Re`) | `KIKOCCJCFILDLDND` |
+| IV (variable `Oe`) | `OJGJHHFMJEJBDFAI` |
 
 ### Data Captured
 
@@ -157,13 +163,19 @@ Each domain received four certificates on registration day, two from Let's Encry
 
 A source familiar with this campaign noted that over 1,000 domains matching this naming pattern may have been registered in the last 90 days. That figure has not been independently verified, but the provisioning consistency across the sample examined here makes it plausible. If accurate, the domain analyzed in this report is a small slice of an active, ongoing campaign. The January 2026 domains suggest the operator has been running this infrastructure for at least two months before the March cluster was registered.
 
-### File Hashes (Main Kit JS)
+### File Hashes (Sample 1 - 'org.yhkjk.bond')
 
 | Algorithm | Hash |
 |---|---|
 | MD5 | `a6f2adaf6bd771efa29369e40ae0e7d8` |
 | SHA1 | `8c5c409ade18be8dc6befc069d5300e974a2f6e6` |
 | SHA256 | `6339e92bf4560087496817a41d7df9fd1b426373de6cb060e7e13352a46905f9` |
+
+### File Hashes (Sample 2 — `org-rfxpa.bond`)
+
+| Algorithm | Hash |
+|---|---|
+| SHA256 | `48749265e299afa4941b4412cde536d85201ea83f976d773c077c66580fa3cb3` |
 
 ---
 
@@ -190,7 +202,7 @@ Getting nothing back across all platforms is itself a finding. This kit has bett
 | SMS lure impersonating government agency | Initial Access | T1660 Phishing: Smishing |
 | Fake payment form capturing card data | Collection | T1056 Input Capture |
 | Live OTP relay to real service | Credential Access | T1557 Adversary-in-the-Middle |
-| AES-256-CBC encrypted WebSocket channel | Command and Control | T1573 Encrypted Channel |
+| AES-128-CBC encrypted WebSocket channel | Command and Control | T1573 Encrypted Channel |
 | WebSocket / Socket.IO C2 | Command and Control | T1071 Application Layer Protocol |
 | Cloudflare CDN masking origin server | Defense Evasion | T1090 Proxy |
 | Obfuscated JavaScript (string rotation) | Defense Evasion | T1027 Obfuscated Files or Information |
@@ -258,3 +270,12 @@ Note: Four additional domains from the March 2026 cluster returned no crt.sh res
 ---
 
 *Analysis conducted March 2026. Sample obtained via unsolicited SMS on personal device. No systems were compromised during analysis.*
+
+---
+## Updates
+
+**March 22, 2026 — Second sample analysis and corrections**
+
+- Obtained a second sample from a different deployment domain (`org-rfxpa.bond`). Reverse engineering confirmed the AES key and IV are identical across both samples, verifying that the same compiled bundle is distributed to multiple operators without recompilation. Key/IV values and second sample hash added.
+- Corrected AES-256-CBC to AES-128-CBC throughout. The extracted key is 16 bytes (128-bit). The original description was incorrect.
+
