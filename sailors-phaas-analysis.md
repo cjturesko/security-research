@@ -207,7 +207,7 @@ Getting nothing back across all platforms is itself a finding. This kit has bett
 | Cloudflare CDN masking origin server | Defense Evasion | T1090 Proxy |
 | Obfuscated JavaScript (string rotation) | Defense Evasion | T1027 Obfuscated Files or Information |
 | FingerprintJS Botd anti-analysis check | Defense Evasion | T1497 Virtualization/Sandbox Evasion |
-| Runtime URL construction with no hardcoded C2 | Defense Evasion | T1027.010 Command Obfuscation |
+| Runtime URL construction with no hardcoded C2 | Defense Evasion | T1027 Command Obfuscation |
 
 ---
 
