@@ -163,7 +163,7 @@ Each domain received four certificates on registration day, two from Let's Encry
 
 A source familiar with this campaign noted that over 1,000 domains matching this naming pattern may have been registered in the last 90 days. That figure has not been independently verified, but the provisioning consistency across the sample examined here makes it plausible. If accurate, the domain analyzed in this report is a small slice of an active, ongoing campaign. The January 2026 domains suggest the operator has been running this infrastructure for at least two months before the March cluster was registered.
 
-### File Hashes (Sample 1 - 'org.yhkjk.bond')
+### File Hashes (Sample 1 - 'org-yhkjk.bond')
 
 | Algorithm | Hash |
 |---|---|
@@ -171,7 +171,7 @@ A source familiar with this campaign noted that over 1,000 domains matching this
 | SHA1 | `8c5c409ade18be8dc6befc069d5300e974a2f6e6` |
 | SHA256 | `6339e92bf4560087496817a41d7df9fd1b426373de6cb060e7e13352a46905f9` |
 
-### File Hashes (Sample 2 — 'org-rfxpa.bond')
+### File Hashes (Sample 2 - 'org-rfxpa.bond')
 
 | Algorithm | Hash |
 |---|---|
