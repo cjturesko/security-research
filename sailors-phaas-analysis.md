@@ -171,7 +171,7 @@ A source familiar with this campaign noted that over 1,000 domains matching this
 | SHA1 | `8c5c409ade18be8dc6befc069d5300e974a2f6e6` |
 | SHA256 | `6339e92bf4560087496817a41d7df9fd1b426373de6cb060e7e13352a46905f9` |
 
-### File Hashes (Sample 2 — `org-rfxpa.bond`)
+### File Hashes (Sample 2 — 'org-rfxpa.bond')
 
 | Algorithm | Hash |
 |---|---|
